@@ -4,6 +4,7 @@ const gravatar = require("gravatar");
 const bcrypt = require("bcryptjs");
 const normalize = require("normalize-url");
 
+
 // Load user model
 const User = require("../../models/User");
 
@@ -15,7 +16,6 @@ router.get("/test", (req, res) => res.json({ msg: "Users Works" }));
 // @router  GET api/users/register
 // @desc    Register User
 // @access  Public
-
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -54,18 +54,33 @@ router.post("/register", async (req, res) => {
       .save()
       .then((user) => res.json(user))
       .catch((err) => console.log(err));
-
-    const payload = {
-      user: {
-        id: user.id,
-      },
-    };
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");
   }
 });
 
+// @router  GET api/users/register
+// @desc    Register User
+// @access  Public
+router.post("/login", (req, res) => {
+  const { email, password } = req.body;
 
+  // Find user by email
+  User.findOne({ email }).then((user) => {
+    if (!user) {
+      return res.status(404).json({ email: "User not found" });
+    }
+
+    // Check password
+    bcrypt.compare(password, user.password).then((isMatch) => {
+      if (isMatch) {
+        res.json({ msg: "Success" });
+      } else {
+        return res.status(400).json({ password: "Password Incorrect" });
+      }
+    });
+  });
+});
 
 module.exports = router;
